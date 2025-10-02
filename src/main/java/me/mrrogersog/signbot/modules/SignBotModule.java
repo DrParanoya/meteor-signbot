@@ -1,13 +1,19 @@
 package me.mrrogersog.signbot.modules;
 
+import meteordevelopment.meteorclient.events.world.ChunkDataEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.entity.SignBlockEntity;
+
+import net.minecraft.block.BlockState;
+import net.minecraft.block.AbstractSignBlock;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.SignBlockEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.chunk.Chunk;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,12 +66,46 @@ public class SignBotModule extends Module {
             }
         }
 
-        // Summary in chat
         ChatUtils.info("[SignBot] Scan complete: " + total + " signs detected");
         ChatUtils.info("[SignBot] " + ignored + " codysmile11 signs ignored 😎");
         ChatUtils.info("[SignBot] " + blank + " blank signs skipped");
         ChatUtils.info("[SignBot] " + valid + " valid signs added to queue");
         ChatUtils.info("[SignBot] Finished scan ✅");
+    }
+
+    @EventHandler
+    private void onChunkData(ChunkDataEvent event) {
+        Chunk chunk = event.chunk();
+        BlockPos.Mutable pos = new BlockPos.Mutable();
+
+        for (int x = chunk.getPos().getStartX(); x <= chunk.getPos().getEndX(); x++) {
+            for (int y = chunk.getBottomY(); y <= chunk.getHighestSectionPosition().getY(); y++) {
+                for (int z = chunk.getPos().getStartZ(); z <= chunk.getPos().getEndZ(); z++) {
+                    pos.set(x, y, z);
+                    BlockState state = chunk.getBlockState(pos);
+
+                    if (state.getBlock() instanceof AbstractSignBlock) {
+                        BlockEntity be = chunk.getBlockEntity(pos);
+                        if (be instanceof SignBlockEntity sign) {
+                            String line1 = sign.getTextOnRow(0, false).getString().trim();
+                            String line2 = sign.getTextOnRow(1, false).getString().trim();
+                            String line3 = sign.getTextOnRow(2, false).getString().trim();
+                            String line4 = sign.getTextOnRow(3, false).getString().trim();
+
+                            boolean isBlank = line1.isEmpty() && line2.isEmpty() && line3.isEmpty() && line4.isEmpty();
+                            boolean isCody = line1.equals("codysmile11") && line2.startsWith("was here:)");
+
+                            BlockPos signPos = sign.getPos();
+
+                            if (!isBlank && !isCody && !signQueue.contains(signPos)) {
+                                signQueue.add(signPos);
+                                ChatUtils.info("[SignBot] Queued sign from chunk: " + signPos.toShortString());
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // ToDo: Add a method to dispatch Baritone commands for the next sign using Meteor or Baritone API.
