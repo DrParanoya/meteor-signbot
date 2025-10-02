@@ -46,6 +46,7 @@ public class SignBotModule extends Module {
     );
 
     private final List<BlockPos> signQueue = new ArrayList<>();
+    private BlockPos currentTarget = null;
     private int tickCounter = 0;
 
     public SignBotModule() {
@@ -63,6 +64,7 @@ public class SignBotModule extends Module {
         if (skipKeybind.get().isPressed() && !signQueue.isEmpty()) {
             mc.player.sendChatMessage("#stop");
             BlockPos next = signQueue.remove(0);
+            currentTarget = next;
             String command = String.format("#goto %d %d %d", next.getX(), next.getY(), next.getZ());
             mc.player.sendChatMessage(command);
             ChatUtils.info("[SignBot] Skipped to next sign: " + command);
@@ -75,10 +77,17 @@ public class SignBotModule extends Module {
         tickCounter++;
         if (tickCounter >= dispatchDelay.get()) {
             BlockPos target = signQueue.remove(0);
+            currentTarget = target;
             String command = String.format("#goto %d %d %d", target.getX(), target.getY(), target.getZ());
             mc.player.sendChatMessage(command);
             ChatUtils.info("[SignBot] Dispatched: " + command);
             tickCounter = 0;
+        }
+
+        if (currentTarget != null && mc.player.getBlockPos().isWithinDistance(currentTarget, 1.5)) {
+            mc.interactionManager.attackBlock(currentTarget, mc.player.getHorizontalFacing());
+            ChatUtils.info("[SignBot] Punched sign at: " + currentTarget.toShortString());
+            currentTarget = null;
         }
     }
 
