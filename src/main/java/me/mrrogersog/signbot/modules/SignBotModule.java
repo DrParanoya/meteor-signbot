@@ -18,6 +18,11 @@ import net.minecraft.world.chunk.Chunk;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class SignBotModule extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -57,6 +62,7 @@ public class SignBotModule extends Module {
     public void onActivate() {
         scanSigns();
         ChatUtils.info("[SignBot] Scanned and queued valid signs.");
+        logToFile("Scanned and queued valid signs.");
     }
 
     @EventHandler
@@ -68,6 +74,7 @@ public class SignBotModule extends Module {
             String command = String.format("#goto %d %d %d", next.getX(), next.getY(), next.getZ());
             mc.player.sendChatMessage(command);
             ChatUtils.info("[SignBot] Skipped to next sign: " + command);
+            logToFile("Skipped to next sign: " + command);
             tickCounter = 0;
             return;
         }
@@ -81,12 +88,14 @@ public class SignBotModule extends Module {
             String command = String.format("#goto %d %d %d", target.getX(), target.getY(), target.getZ());
             mc.player.sendChatMessage(command);
             ChatUtils.info("[SignBot] Dispatched: " + command);
+            logToFile("Dispatched: " + command);
             tickCounter = 0;
         }
 
         if (currentTarget != null && mc.player.getBlockPos().isWithinDistance(currentTarget, 1.5)) {
             mc.interactionManager.attackBlock(currentTarget, mc.player.getHorizontalFacing());
             ChatUtils.info("[SignBot] Punched sign at: " + currentTarget.toShortString());
+            logToFile("Punched sign at: " + currentTarget.toShortString());
             currentTarget = null;
         }
     }
@@ -126,6 +135,12 @@ public class SignBotModule extends Module {
         ChatUtils.info("[SignBot] " + blank + " blank signs skipped");
         ChatUtils.info("[SignBot] " + valid + " valid signs added to queue");
         ChatUtils.info("[SignBot] Finished scan ✅");
+
+        logToFile("Scan complete: " + total + " signs detected");
+        logToFile(ignored + " codysmile11 signs ignored");
+        logToFile(blank + " blank signs skipped");
+        logToFile(valid + " valid signs added to queue");
+        logToFile("Finished scan ✅");
     }
 
     @EventHandler
@@ -155,11 +170,22 @@ public class SignBotModule extends Module {
                             if (!isBlank && !isCody && !signQueue.contains(signPos)) {
                                 signQueue.add(signPos);
                                 ChatUtils.info("[SignBot] Queued sign from chunk: " + signPos.toShortString());
+                                logToFile("Queued sign from chunk: " + signPos.toShortString());
                             }
                         }
                     }
                 }
             }
+        }
+    }
+
+    private void logToFile(String message) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("logs/signbot-log.txt", true))) {
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            writer.write("[" + timestamp + "] " + message);
+            writer.newLine();
+        } catch (IOException e) {
+            ChatUtils.error("[SignBot] Failed to write to log file.");
         }
     }
 }
