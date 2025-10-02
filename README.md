@@ -1,5 +1,3 @@
----
-
 # SignBot Meteor Add-on 🪧🤖
 
 **SignBot** is a Meteor Client add-on for Minecraft. It scans loaded signs, filters out unwanted ones, and sends Baritone `#goto` commands to valid sign locations. It now supports autonomous dispatching, sign destruction, and persistent logging for debugging.
