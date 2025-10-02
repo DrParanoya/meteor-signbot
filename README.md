@@ -1,5 +1,3 @@
-Here’s an updated version of your README that reflects all the new features you’ve added—auto-dispatch, skip keybind, auto-punch, and persistent logging—while keeping the tone clean and modular:
-
 ---
 
 # SignBot Meteor Add-on 🪧🤖
@@ -55,5 +53,3 @@ Here’s an updated version of your README that reflects all the new features yo
 This project is released under the [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) license.
 
 ---
-
-Let me know if you want to add screenshots, a demo GIF, or a roadmap section next. This README now reflects the full power of your bot.
