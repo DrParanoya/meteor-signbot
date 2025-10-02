@@ -2,6 +2,7 @@ package me.mrrogersog.signbot.modules;
 
 import meteordevelopment.meteorclient.events.world.ChunkDataEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
@@ -19,7 +20,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SignBotModule extends Module {
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
+    private final Setting<Boolean> autoDispatch = sgGeneral.add(new BoolSetting.Builder()
+        .name("auto-dispatch")
+        .description("Automatically dispatch Baritone #goto commands.")
+        .defaultValue(true)
+        .build()
+    );
+
+    private final Setting<Integer> dispatchDelay = sgGeneral.add(new IntSetting.Builder()
+        .name("dispatch-delay")
+        .description("Delay between dispatches in ticks (20 ticks = 1 second).")
+        .defaultValue(40)
+        .min(5)
+        .max(200)
+        .build()
+    );
+
+    private final Setting<Keybind> skipKeybind = sgGeneral.add(new KeybindSetting.Builder()
+        .name("skip-sign")
+        .description("Skip the current sign and dispatch the next one.")
+        .defaultValue(Keybind.none())
+        .build()
+    );
+
     private final List<BlockPos> signQueue = new ArrayList<>();
+    private int tickCounter = 0;
 
     public SignBotModule() {
         super(Category.Misc, "SignBot", "Scans signs and sends Baritone #goto commands.");
@@ -33,7 +60,26 @@ public class SignBotModule extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        // Optional: Add logic here to auto-dispatch Baritone commands for queued signs, if desired.
+        if (skipKeybind.get().isPressed() && !signQueue.isEmpty()) {
+            mc.player.sendChatMessage("#stop");
+            BlockPos next = signQueue.remove(0);
+            String command = String.format("#goto %d %d %d", next.getX(), next.getY(), next.getZ());
+            mc.player.sendChatMessage(command);
+            ChatUtils.info("[SignBot] Skipped to next sign: " + command);
+            tickCounter = 0;
+            return;
+        }
+
+        if (!autoDispatch.get() || signQueue.isEmpty()) return;
+
+        tickCounter++;
+        if (tickCounter >= dispatchDelay.get()) {
+            BlockPos target = signQueue.remove(0);
+            String command = String.format("#goto %d %d %d", target.getX(), target.getY(), target.getZ());
+            mc.player.sendChatMessage(command);
+            ChatUtils.info("[SignBot] Dispatched: " + command);
+            tickCounter = 0;
+        }
     }
 
     private void scanSigns() {
@@ -107,6 +153,4 @@ public class SignBotModule extends Module {
             }
         }
     }
-
-    // ToDo: Add a method to dispatch Baritone commands for the next sign using Meteor or Baritone API.
 }
