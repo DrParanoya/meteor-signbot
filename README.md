@@ -52,7 +52,7 @@ Here’s an updated version of your README that reflects all the new features yo
 
 ## License
 
-MIT License
+This project is released under the [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) license.
 
 ---
 
