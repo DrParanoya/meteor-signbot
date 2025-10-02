@@ -1,1 +1,1 @@
-{"id":"signbot","name":"SignBot","version":"1.0.0","authors":["MrRogersOG"],"description":"A Meteor Client add-on that scans signs and dispatches Baritone commands. Credits to the Meteor Team.","main":"me.mrrogersog.signbot.SignBotAddon"}
+{"id": "signbot", "name": "SignBot", "version": "1.0.0", "authors": ["MrRogersOG"], "description": "A Meteor Client add-on that scans signs and dispatches Baritone commands. Credits to the Meteor Team.", "main": "me.mrrogersog.signbot.SignBotAddon"}
